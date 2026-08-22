@@ -7,6 +7,8 @@ export default function TransactionModal({ isOpen, onClose, onSave, editingTrans
     transaction_type: 'HESAPTAN FAST',
     fast_ref_no: '',
     receiver_name: '',
+    receiver_branch: 'HÜRRİYET',
+    receiver_account_no: '00667 / 6605251',
     receiver_iban: '',
     commission: '7.97',
     bsmv: '0.40',
@@ -23,7 +25,10 @@ export default function TransactionModal({ isOpen, onClose, onSave, editingTrans
     if (editingTransaction) {
       setFormData({
         ...editingTransaction,
-        customer: editingTransaction.customer || customerId || 1
+        customer: editingTransaction.customer || customerId || 1,
+        transaction_type: editingTransaction.transaction_type || 'HESAPTAN FAST',
+        receiver_branch: editingTransaction.receiver_branch || 'HÜRRİYET',
+        receiver_account_no: editingTransaction.receiver_account_no || '00667 / 6605251'
       });
     } else {
       const now = new Date();
@@ -34,6 +39,8 @@ export default function TransactionModal({ isOpen, onClose, onSave, editingTrans
         transaction_type: 'HESAPTAN FAST',
         fast_ref_no: defaultRef,
         receiver_name: '',
+        receiver_branch: 'HÜRRİYET',
+        receiver_account_no: '00667 / 6605251',
         receiver_iban: 'TR',
         commission: '7.97',
         bsmv: '0.40',
@@ -48,16 +55,40 @@ export default function TransactionModal({ isOpen, onClose, onSave, editingTrans
     }
   }, [editingTransaction, customerId, isOpen]);
 
+  // Handle transaction_type switch
+  const handleTypeChange = (typeVal) => {
+    const isHavale = typeVal === 'HESAPTAN HESABA HAVALE';
+    const recUpper = formData.receiver_name.toUpperCase();
+    const newCommission = isHavale ? '3.99' : '7.97';
+    const newBsmv = isHavale ? '0.20' : '0.40';
+    const newDesc = isHavale
+      ? (recUpper ? `${recUpper}-HVL-CEP ŞUBE` : 'HVL-CEP ŞUBE')
+      : (recUpper ? `${recUpper}-FAST-CEP ŞUBE-${formData.fast_ref_no}` : `FAST-CEP ŞUBE-${formData.fast_ref_no}`);
+
+    setFormData(prev => ({
+      ...prev,
+      transaction_type: typeVal,
+      commission: newCommission,
+      bsmv: newBsmv,
+      description: newDesc
+    }));
+  };
+
   // Auto-format description when receiver_name or fast_ref_no changes
   const handleReceiverNameChange = (val) => {
     const uppercaseVal = val.toUpperCase();
-    const autoDesc = uppercaseVal ? `${uppercaseVal}-FAST-CEP ŞUBE-${formData.fast_ref_no}` : `FAST-CEP ŞUBE-${formData.fast_ref_no}`;
+    const isHavale = formData.transaction_type === 'HESAPTAN HESABA HAVALE';
+    const autoDesc = isHavale
+      ? (uppercaseVal ? `${uppercaseVal}-HVL-CEP ŞUBE` : 'HVL-CEP ŞUBE')
+      : (uppercaseVal ? `${uppercaseVal}-FAST-CEP ŞUBE-${formData.fast_ref_no}` : `FAST-CEP ŞUBE-${formData.fast_ref_no}`);
+
     setFormData(prev => ({
       ...prev,
       receiver_name: val,
       description: autoDesc
     }));
   };
+
 
   const handleRefNoChange = (val) => {
     const namePart = formData.receiver_name ? formData.receiver_name.toUpperCase() : '';
@@ -98,6 +129,20 @@ export default function TransactionModal({ isOpen, onClose, onSave, editingTrans
         </div>
 
         <form onSubmit={handleSubmit}>
+          {/* İşlem Türü Selection */}
+          <div className="form-group">
+            <label className="form-label">İşlem Türü</label>
+            <select
+              className="form-select"
+              value={formData.transaction_type}
+              onChange={e => handleTypeChange(e.target.value)}
+              style={{ fontWeight: 700 }}
+            >
+              <option value="HESAPTAN FAST">HESAPTAN FAST (Başka Bankaya Transfer / FAST)</option>
+              <option value="HESAPTAN HESABA HAVALE">HESAPTAN HESABA HAVALE (Garantiden Garantiye)</option>
+            </select>
+          </div>
+
           {/* Direction Toggle */}
           <div className="form-group">
             <label className="form-label">İşlem Yönü</label>
@@ -128,6 +173,35 @@ export default function TransactionModal({ isOpen, onClose, onSave, editingTrans
               </button>
             </div>
           </div>
+
+          {/* Extra Havale Fields */}
+          {formData.transaction_type === 'HESAPTAN HESABA HAVALE' && (
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Alacaklı Şube</label>
+                <input
+                  type="text"
+                  required
+                  className="form-input"
+                  placeholder="Örn: HÜRRİYET"
+                  value={formData.receiver_branch}
+                  onChange={e => setFormData({ ...formData, receiver_branch: e.target.value })}
+                />
+              </div>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Alacaklı Hesap No</label>
+                <input
+                  type="text"
+                  required
+                  className="form-input"
+                  placeholder="Örn: 00667 / 6605251"
+                  value={formData.receiver_account_no}
+                  onChange={e => setFormData({ ...formData, receiver_account_no: e.target.value })}
+                />
+              </div>
+            </div>
+          )}
+
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
             <div className="form-group">
