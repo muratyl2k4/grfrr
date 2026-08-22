@@ -8,6 +8,7 @@ export default function ProfileModal({ isOpen, onClose, customer, onSaveProfile 
   const [branchName, setBranchName] = useState('');
   const [accountNo, setAccountNo] = useState('');
   const [iban, setIban] = useState('');
+  const [accountOpenDate, setAccountOpenDate] = useState('');
   const [address, setAddress] = useState('');
   const [photoFile, setPhotoFile] = useState(null);
   const [photoPreview, setPhotoPreview] = useState('');
@@ -21,6 +22,7 @@ export default function ProfileModal({ isOpen, onClose, customer, onSaveProfile 
       setBranchName(customer.branch_name || '');
       setAccountNo(customer.account_no || '');
       setIban(customer.iban || '');
+      setAccountOpenDate(customer.account_open_date || '');
       setAddress(customer.address || '');
       setPhotoPreview(customer.profile_photo || '');
       setPhotoFile(null);
@@ -48,7 +50,11 @@ export default function ProfileModal({ isOpen, onClose, customer, onSaveProfile 
       formData.append('branch_name', branchName);
       formData.append('account_no', accountNo);
       formData.append('iban', iban);
+      if (accountOpenDate) {
+        formData.append('account_open_date', accountOpenDate);
+      }
       formData.append('address', address);
+
 
       if (photoFile) {
         formData.append('profile_photo', photoFile);
@@ -325,6 +331,29 @@ export default function ProfileModal({ isOpen, onClose, customer, onSaveProfile 
                 }}
               />
             </div>
+
+            {/* Hesap Açılış Tarihi */}
+            <div style={{ gridColumn: 'span 2' }}>
+              <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, color: '#475569', marginBottom: 6 }}>
+                HESAP AÇILIŞ TARİHİ
+              </label>
+              <input
+                type="date"
+                value={accountOpenDate}
+                onChange={(e) => setAccountOpenDate(e.target.value)}
+                required
+                style={{
+                  width: '100%',
+                  padding: '10px 14px',
+                  borderRadius: 10,
+                  border: '1.5px solid #cbd5e1',
+                  fontSize: '0.95rem',
+                  outline: 'none',
+                  boxSizing: 'border-box'
+                }}
+              />
+            </div>
+
 
             {/* Adres */}
             <div style={{ gridColumn: 'span 2' }}>
