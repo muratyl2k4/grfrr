@@ -104,17 +104,29 @@ export default function TransactionModal({ isOpen, onClose, onSave, editingTrans
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Final check for description auto-format
-    let finalDesc = formData.description;
-    if (!finalDesc || !finalDesc.includes('FAST-CEP ŞUBE')) {
-      const namePart = formData.receiver_name ? formData.receiver_name.trim().toUpperCase() : 'ALICI';
-      finalDesc = `${namePart}-FAST-CEP ŞUBE-${formData.fast_ref_no}`;
+    let finalDesc = (formData.description || '').trim();
+    const isHavale = formData.transaction_type === 'HESAPTAN HESABA HAVALE';
+    const namePart = formData.receiver_name ? formData.receiver_name.trim().toUpperCase() : '';
+
+    if (!finalDesc) {
+      if (isHavale) {
+        finalDesc = namePart ? `${namePart}-HVL-CEP ŞUBE` : 'HVL-CEP ŞUBE';
+      } else {
+        finalDesc = namePart ? `${namePart}-FAST-CEP ŞUBE-${formData.fast_ref_no}` : `FAST-CEP ŞUBE-${formData.fast_ref_no}`;
+      }
+    } else if (isHavale && finalDesc.includes('FAST')) {
+      finalDesc = finalDesc.replace(/-FAST-CEP ŞUBE-\d+/, '-HVL-CEP ŞUBE')
+                           .replace(/-FAST-CEP ŞUBE/, '-HVL-CEP ŞUBE')
+                           .replace(/FAST-CEP ŞUBE/, 'HVL-CEP ŞUBE')
+                           .replace(/-FAST-\d+/, '-HVL');
     }
+
     onSave({
       ...formData,
       description: finalDesc
     });
   };
+
 
   return (
     <div className="modal-backdrop" onClick={onClose}>
